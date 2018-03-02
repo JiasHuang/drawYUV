@@ -8,9 +8,9 @@
 
 <title>drawYUV</title>
 
-<link rel="stylesheet" href="style.css?v=a5b9509a11bc03a4f730f7ab920f59fe">
+<link rel="stylesheet" href="style.css?v=049f62d4fec93b8ca6d5f83575676f38">
 
-<script type="text/javascript" src="drawYUV.js?v=40fea784e5c4c8a8b1f4f54df9d47f1f"></script>
+<script type="text/javascript" src="drawYUV.js?v=eb96fdd094607834a653444cd3bd1c0a"></script>
 
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 
@@ -20,7 +20,7 @@
 
 </head>
 
-<body bgcolor=silver>
+<body bgcolor=silver ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragend="handleDragEnd(event)">
 
   <table class='settings'>
 
@@ -64,10 +64,8 @@
 
   <input type="file" id="files" name="files[]" multiple />
 
-  <div id="dropZone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragend="handleDragEnd(event)">
-    <p id="dropZoneDesc">Drag YUV file here</p>
-    <canvas id="resultYUV"></canvas>
-  </div>
+  <p id="dropZoneDesc">Drag YUV file here</p>
+  <canvas id="resultYUV"></canvas>
 
 </body>
 

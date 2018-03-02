@@ -1,5 +1,5 @@
 
-var yuv = null;
+var bufferYUV = null;
 var settings = ['format', 'width', 'height', 'pitchY', 'pitchC', 'zoom'];
 
 function saveCurrentSettings() {
@@ -40,7 +40,7 @@ function yuv2canvas() {
   var pitchC = $('#pitchC').val();
   var zoom = $('#zoom').val();
 
-  if (!yuv || width <= 0 || height <= 0) {
+  if (!bufferYUV || width <= 0 || height <= 0) {
     console.log('invalid parameters');
     return;
   }
@@ -77,7 +77,7 @@ function yuv2canvas() {
     for (h=0; h<height; h++) {
       for (w=0; w<width; w++) {
         posY = w + h * pitchY + offsetY;
-        Y = yuv[posY];
+        Y = bufferYUV[posY];
         pos = w*4 + width*h*4;
         output.data[pos+0] = Y;
         output.data[pos+1] = Y;
@@ -94,9 +94,9 @@ function yuv2canvas() {
         posY = w + h * pitchY + offsetY;
         posU = (w>>1) + (h>>1) * pitchC + offsetU;
         posV = (w>>1) + (h>>1) * pitchC + offsetV;
-        Y = yuv[posY];
-        U = yuv[posU];
-        V = yuv[posV];
+        Y = bufferYUV[posY];
+        U = bufferYUV[posU];
+        V = bufferYUV[posV];
         pos = w*4 + width*h*4;
         output.data[pos+0] = Y + 1.370 * (V - 128);
         output.data[pos+1] = Y - 0.698 * (V - 128) - 0.337 * (U - 128);
@@ -112,9 +112,9 @@ function yuv2canvas() {
         posY = w + h * pitchY + offsetY;
         posU = (w>>1)*2 + (h>>1) * pitchC + offsetC;
         posV = posU + 1;
-        Y = yuv[posY];
-        U = yuv[posU];
-        V = yuv[posV];
+        Y = bufferYUV[posY];
+        U = bufferYUV[posU];
+        V = bufferYUV[posV];
         pos = w*4 + width*h*4;
         output.data[pos+0] = Y + 1.370 * (V - 128);
         output.data[pos+1] = Y - 0.698 * (V - 128) - 0.337 * (U - 128);
@@ -132,37 +132,67 @@ function yuv2canvas() {
   saveCurrentSettings();
 }
 
-function readInputFile(f)
+function readInputFiles(files)
 {
-  console.log('readInputFile: '+f.name);
-  var reader = new FileReader();
-  reader.onload = function() {
-    var data = reader.result;
-    yuv = new Uint8Array(reader.result);
-    yuv2canvas();
-  };
-  $('#dropZoneDesc').text(f.name);
-  reader.readAsArrayBuffer(f);
+  console.log(files);
+  var format = $('#format').val();
+
+  if (files.length == 2 && format == 'NV12') {
+
+    if (files[0].size > files[1].size) {
+      var fileY = files[0];
+      var fileC = files[1];
+    } else {
+      var fileY = files[1];
+      var fileC = files[0];
+    }
+
+    bufferYUV = new Uint8Array(fileY.size + fileC.size);
+
+    var readerC = new FileReader();
+    readerC.onload = function() {
+      bufferYUV.set(new Uint8Array(this.result), fileY.size);
+      yuv2canvas();
+    };
+
+    var readerY = new FileReader();
+    readerY.onload = function() {
+      bufferYUV.set(new Uint8Array(this.result), 0);
+      readerC.readAsArrayBuffer(fileC);
+    };
+
+    $('#dropZoneDesc').text(fileY.name + ' + ' + fileC.name);
+    readerY.readAsArrayBuffer(fileY);
+  }
+  else {
+    var reader = new FileReader();
+    reader.onload = function() {
+      bufferYUV = new Uint8Array(reader.result);
+      yuv2canvas();
+    };
+    $('#dropZoneDesc').text(files[0].name);
+    reader.readAsArrayBuffer(files[0]);
+  }
 }
 
 function handleFileSelect(e) {
   console.log('handleFileSelect');
   var files = e.target.files;
-  for (var i = 0, f; f = files[i]; i++) {
-    readInputFile(f);
-  }
+  readInputFiles(files);
 }
 
 function handleDrop(e) {
   e.preventDefault();
+  $('#files').val('');
+  var files = [];
   var dt = e.dataTransfer;
   if (dt.items) {
     for (var i=0; i < dt.items.length; i++) {
       if (dt.items[i].kind == "file") {
-        $('#files').val('');
-        readInputFile(dt.items[i].getAsFile());
+        files.push(dt.items[i].getAsFile());
       }
     }
+    readInputFiles(files);
   }
 }
 

@@ -1,8 +1,15 @@
 
+body {
+  width: calc(100vw - 8px);
+  min-height: calc(100vh - 8px);
+  margin: 2px;
+  border: 2px dashed white;
+}
+
 .settings {
   border: 2px solid white;
   font-size: 20px;
-  margin: 25px 0px;
+  margin: 5px;
 }
 
 .settings th {
@@ -19,18 +26,14 @@
   text-align-last: center;
 }
 
-#dropZone {
-  width:  100%;
-  height: 100%;
-  margin: 10px 0px;
+#files {
+  margin: 5px;
 }
 
 #dropZoneDesc {
+  display: block;
+  margin: 5px;
   font-size: 32px;
   color: white;
 }
 
-#resultYUV {
-  width: 100%;
-  height: 100%;
-}
