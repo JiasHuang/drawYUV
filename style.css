@@ -1,5 +1,6 @@
 
 body {
+  background-color: silver;
   width: calc(100vw - 8px);
   min-height: calc(100vh - 8px);
   margin: 2px;
@@ -31,9 +32,7 @@ body {
 }
 
 #dropZoneDesc {
-  display: block;
   margin: 5px;
   font-size: 32px;
   color: white;
 }
-

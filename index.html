@@ -20,17 +20,18 @@
 
 </head>
 
-<body bgcolor=silver ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragend="handleDragEnd(event)">
+<body ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragend="handleDragEnd(event)">
 
   <table class='settings'>
 
     <tr>
       <th>format</th>
       <td>
-        <select id="format" onchange="yuv2canvas()">
+        <select id="format" onchange="drawYUV()">
           <option value="I420">I420</option>
           <option value="YV12">YV12</option>
           <option value="NV12" selected="selected">NV12</option>
+          <option value="NV21">NV21</option>
           <option value="Y">Y</option>
         </select>
       </td>
@@ -57,7 +58,7 @@
       <td><input type="text" id="pitchY" value="0" /></td>
       <th>pitchC</th>
       <td><input type="text" id="pitchC" value="0" /></td>
-      <td><button onclick="yuv2canvas();">refresh</button></td>
+      <td><button onclick="drawYUV();">refresh</button></td>
     </tr>
 
   </table>
