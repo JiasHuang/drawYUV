@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="referrer" content="no-referrer" />
+
+<title>drawYUV</title>
+
+<link rel="stylesheet" href="style.css?v=a5b9509a11bc03a4f730f7ab920f59fe">
+
+<script type="text/javascript" src="drawYUV.js?v=40fea784e5c4c8a8b1f4f54df9d47f1f"></script>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+<script>
+  $(document).ready(onDocumentReady);
+</script>
+
+</head>
+
+<body bgcolor=silver>
+
+  <table class='settings'>
+
+    <tr>
+      <th>format</th>
+      <td>
+        <select id="format" onchange="yuv2canvas()">
+          <option value="I420">I420</option>
+          <option value="YV12">YV12</option>
+          <option value="NV12" selected="selected">NV12</option>
+          <option value="Y">Y</option>
+        </select>
+      </td>
+      <th>zoom</th>
+      <td>
+        <select id="zoom" onchange="zoomImage()">
+          <option value="0.125">0.125</option>
+          <option value="0.25">0.25</option>
+          <option value="0.5">0.5</option>
+          <option value="1" selected="selected">1</option>
+          <option value="2">2</option>
+          <option value="4">4</option>
+          <option value="8">8</option>
+        </select>
+      </td>
+    </tr>
+
+    <tr>
+      <th>width</th>
+      <td><input type="text" id="width" value="1920" /></td>
+      <th>height</th>
+      <td><input type="text" id="height" value="1088" /></td>
+      <th>pitchY</th>
+      <td><input type="text" id="pitchY" value="0" /></td>
+      <th>pitchC</th>
+      <td><input type="text" id="pitchC" value="0" /></td>
+      <td><button onclick="yuv2canvas();">refresh</button></td>
+    </tr>
+
+  </table>
+
+  <input type="file" id="files" name="files[]" multiple />
+
+  <div id="dropZone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragend="handleDragEnd(event)">
+    <p id="dropZoneDesc">Drag YUV file here</p>
+    <canvas id="resultYUV"></canvas>
+  </div>
+
+</body>
+
+</html>
