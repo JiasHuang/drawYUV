@@ -1,17 +1,17 @@
 
-var inputs = ['format', 'width', 'height', 'pitchY', 'pitchC', 'zoom'];
+const canvasInputs = ['format', 'width', 'height', 'pitchY', 'pitchC', 'zoom'];
 
 function saveCanvasSettings(canvas) {
-  for (var i=0; i<inputs.length; i++)  {
-    localStorage.setItem(canvas.attr('id')+'_'+inputs[i], canvas.data(inputs[i]).val());
+  for (var i=0; i<canvasInputs.length; i++)  {
+    localStorage.setItem(canvas.attr('id')+'_'+canvasInputs[i], canvas.data(canvasInputs[i]).val());
   }
 }
 
 function loadCanvasSettings(canvas) {
-  for (var i=0; i<inputs.length; i++)  {
-    var value = localStorage.getItem(canvas.attr('id')+'_'+inputs[i]);
+  for (var i=0; i<canvasInputs.length; i++)  {
+    var value = localStorage.getItem(canvas.attr('id')+'_'+canvasInputs[i]);
     if (value !== null) {
-      canvas.data(inputs[i]).val(value);
+      canvas.data(canvasInputs[i]).val(value);
     }
   }
 }
@@ -134,8 +134,8 @@ function refreshImage(canvas) {
   return drawYUV(canvas, canvas.data('bufferYUV'));
 }
 
-function readInputFiles(files, canvas)
-{
+function readInputFiles(files, canvas) {
+
   var format = canvas.data('format').val();
 
   if (files.length == 0) {
@@ -212,8 +212,8 @@ function initCanvasSettings(canvas, options) {
   for (var key in options) {
     canvas.data(key, $('#'+options[key]));
   }
-  document.getElementById(canvas.data('selectedFiles').attr('id')).addEventListener('change', handleFileSelect.bind(canvas), false);
-  document.getElementById(canvas.data('dropZone').attr('id')).addEventListener('drop', handleDrop.bind(canvas), false);
-  document.getElementById(canvas.data('dropZone').attr('id')).addEventListener('dragover', handleDragOver, false);
+  document.getElementById(options['selectedFiles']).addEventListener('change', handleFileSelect.bind(canvas), false);
+  document.getElementById(options['dropZone']).addEventListener('drop', handleDrop.bind(canvas), false);
+  document.getElementById(options['dropZone']).addEventListener('dragover', handleDragOver, false);
   loadCanvasSettings(canvas);
 }
