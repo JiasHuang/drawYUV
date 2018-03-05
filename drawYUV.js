@@ -1,44 +1,43 @@
 
-var bufferYUV = null;
-var settings = ['format', 'width', 'height', 'pitchY', 'pitchC', 'zoom'];
+var inputs = ['format', 'width', 'height', 'pitchY', 'pitchC', 'zoom'];
 
-function saveCurrentSettings() {
-  var lists = settings;
-  for (var i=0; i<lists.length; i++)  {
-    localStorage.setItem(lists[i], $('#'+lists[i]).val());
+function saveCanvasSettings(canvas) {
+  for (var i=0; i<inputs.length; i++)  {
+    localStorage.setItem(canvas.attr('id')+'_'+inputs[i], canvas.data(inputs[i]).val());
   }
 }
 
-function loadCurrentSettings() {
-  var lists = settings;
-  for (var i=0; i<lists.length; i++)  {
-    if (localStorage.getItem(lists[i]) === null) {
-      return;
+function loadCanvasSettings(canvas) {
+  for (var i=0; i<inputs.length; i++)  {
+    var value = localStorage.getItem(canvas.attr('id')+'_'+inputs[i]);
+    if (value !== null) {
+      canvas.data(inputs[i]).val(value);
     }
-    $('#'+lists[i]).val(localStorage.getItem(lists[i]));
   }
 }
 
-function zoomImage() {
-  var width = $('#width').val();
-  var height = $('#height').val();
-  var zoom = $('#zoom').val();
+function zoomImage(canvas) {
+
+  var width   = canvas.data('width').val();
+  var height  = canvas.data('height').val();
+  var zoom    = canvas.data('zoom').val();
+
   if (width > 0 && height > 0) {
-    $("#resultYUV").css({width:width*zoom, height:height*zoom});
-    saveCurrentSettings();
+    canvas.css({width:width*zoom, height:height*zoom});
+    saveCanvasSettings(canvas);
   }
 }
 
-function drawYUV() {
+function drawYUV(canvas, bufferYUV) {
 
-  var format = $('#format').val();
-  var width = $('#width').val();
-  var height = $('#height').val();
-  var pitchY = $('#pitchY').val();
-  var pitchC = $('#pitchC').val();
+  var format  = canvas.data('format').val();
+  var width   = canvas.data('width').val();
+  var height  = canvas.data('height').val();
+  var pitchY  = canvas.data('pitchY').val();
+  var pitchC  = canvas.data('pitchC').val();
 
   if (!bufferYUV || width <= 0 || height <= 0) {
-    console.log('Invalid parameters');
+    console.log('Invalid parameters %s %s %s', bufferYUV, width, height);
     return;
   }
 
@@ -55,8 +54,7 @@ function drawYUV() {
     }
   }
 
-  var canvas  = document.getElementById("resultYUV");
-  var context = canvas.getContext("2d");
+  var context = document.getElementById(canvas.attr('id')).getContext("2d");
   var output  = context.createImageData(width, height);
 
   var offsetY = 0;
@@ -128,13 +126,17 @@ function drawYUV() {
   context.canvas.height = height;
   context.putImageData(output, 0, 0);
 
-  zoomImage();
-  saveCurrentSettings();
+  zoomImage(canvas);
+  canvas.data('bufferYUV', bufferYUV);
 }
 
-function readInputFiles(files)
+function refreshImage(canvas) {
+  return drawYUV(canvas, canvas.data('bufferYUV'));
+}
+
+function readInputFiles(files, canvas)
 {
-  var format = $('#format').val();
+  var format = canvas.data('format').val();
 
   if (files.length == 0) {
     console.log('No input files');
@@ -156,7 +158,7 @@ function readInputFiles(files)
     var readerC = new FileReader();
     readerC.onload = function() {
       bufferYUV.set(new Uint8Array(this.result), fileY.size);
-      drawYUV();
+      drawYUV(canvas, bufferYUV);
     };
 
     var readerY = new FileReader();
@@ -165,7 +167,7 @@ function readInputFiles(files)
       readerC.readAsArrayBuffer(fileC);
     };
 
-    $('#dropZoneDesc').text(fileY.name + ' + ' + fileC.name);
+    canvas.data('dropZoneDesc').text(fileY.name + ' + ' + fileC.name);
     readerY.readAsArrayBuffer(fileY);
   }
 
@@ -173,21 +175,22 @@ function readInputFiles(files)
     var reader = new FileReader();
     reader.onload = function() {
       bufferYUV = new Uint8Array(reader.result);
-      drawYUV();
+      drawYUV(canvas, bufferYUV);
     };
-    $('#dropZoneDesc').text(files[0].name);
+    canvas.data('dropZoneDesc').text(files[0].name);
     reader.readAsArrayBuffer(files[0]);
   }
 }
 
 function handleFileSelect(e) {
   var files = e.target.files;
-  readInputFiles(files);
+  var canvas = $(this);
+  readInputFiles(files, canvas);
 }
 
 function handleDrop(e) {
   e.preventDefault();
-  $('#files').val('');
+  var canvas = $(this);
   var files = [];
   var dt = e.dataTransfer;
   if (dt.items) {
@@ -196,7 +199,8 @@ function handleDrop(e) {
         files.push(dt.items[i].getAsFile());
       }
     }
-    readInputFiles(files);
+    canvas.data('selectedFiles').val('');
+    readInputFiles(files, canvas);
   }
 }
 
@@ -204,22 +208,12 @@ function handleDragOver(e) {
   e.preventDefault();
 }
 
-function handleDragEnd(e) {
-  var dt = e.dataTransfer;
-  if (dt.items) {
-    for (var i = 0; i < dt.items.length; i++) {
-      dt.items.remove(i);
-    }
-  } else {
-    e.dataTransfer.clearData();
+function initCanvasSettings(canvas, options) {
+  for (var key in options) {
+    canvas.data(key, $('#'+options[key]));
   }
-}
-
-function onDocumentReady() {
-  // Check for the various File API support.
-  if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
-    alert('The File APIs are not fully supported in this browser.');
-  }
-  document.getElementById('files').addEventListener('change', handleFileSelect, false);
-  loadCurrentSettings();
+  document.getElementById(canvas.data('selectedFiles').attr('id')).addEventListener('change', handleFileSelect.bind(canvas), false);
+  document.getElementById(canvas.data('dropZone').attr('id')).addEventListener('drop', handleDrop.bind(canvas), false);
+  document.getElementById(canvas.data('dropZone').attr('id')).addEventListener('dragover', handleDragOver, false);
+  loadCanvasSettings(canvas);
 }
