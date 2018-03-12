@@ -24,35 +24,15 @@ function zoomImage(canvas) {
 
   if (width > 0 && height > 0) {
     canvas.css({width:width*zoom, height:height*zoom});
-    saveCanvasSettings(canvas);
   }
 }
 
-function drawYUV(canvas, bufferYUV) {
+function zoomImageAndSaveCanvasSettings(canvas) {
+  zoomImage(canvas);
+  saveCanvasSettings(canvas);
+}
 
-  var format  = canvas.data('format').val();
-  var width   = canvas.data('width').val();
-  var height  = canvas.data('height').val();
-  var pitchY  = canvas.data('pitchY').val();
-  var pitchC  = canvas.data('pitchC').val();
-
-  if (!bufferYUV || width <= 0 || height <= 0) {
-    console.log('Invalid parameters %s %s %s', bufferYUV, width, height);
-    return;
-  }
-
-  if (pitchY <= 0) {
-    pitchY = width;
-  }
-
-  if (pitchC <= 0) {
-    if (format == 'NV12' || format == 'NV21') {
-      pitchC = pitchY;
-    }
-    if (format == 'I420' || format == 'YV12') {
-      pitchC = pitchY >> 1;
-    }
-  }
+function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 
   var context = document.getElementById(canvas.attr('id')).getContext("2d");
   var output  = context.createImageData(width, height);
@@ -76,7 +56,7 @@ function drawYUV(canvas, bufferYUV) {
     for (h=0; h<height; h++) {
       for (w=0; w<width; w++) {
         posY = w + h * pitchY + offsetY;
-        Y = bufferYUV[posY];
+        Y = buffer[posY];
         pos = w*4 + width*h*4;
         output.data[pos+0] = Y;
         output.data[pos+1] = Y;
@@ -92,9 +72,9 @@ function drawYUV(canvas, bufferYUV) {
         posY = w + h * pitchY + offsetY;
         posU = (w>>1) + (h>>1) * pitchC + offsetU;
         posV = (w>>1) + (h>>1) * pitchC + offsetV;
-        Y = bufferYUV[posY];
-        U = bufferYUV[posU];
-        V = bufferYUV[posV];
+        Y = buffer[posY];
+        U = buffer[posU];
+        V = buffer[posV];
         pos = w*4 + width*h*4;
         output.data[pos+0] = Y + 1.370 * (V - 128);
         output.data[pos+1] = Y - 0.698 * (V - 128) - 0.337 * (U - 128);
@@ -110,9 +90,9 @@ function drawYUV(canvas, bufferYUV) {
         posY = w + h * pitchY + offsetY;
         posU = (w>>1)*2 + (h>>1) * pitchC + offsetC;
         posV = posU ^ 1;
-        Y = bufferYUV[posY];
-        U = bufferYUV[posU];
-        V = bufferYUV[posV];
+        Y = buffer[posY];
+        U = buffer[posU];
+        V = buffer[posV];
         pos = w*4 + width*h*4;
         output.data[pos+0] = Y + 1.370 * (V - 128);
         output.data[pos+1] = Y - 0.698 * (V - 128) - 0.337 * (U - 128);
@@ -125,13 +105,54 @@ function drawYUV(canvas, bufferYUV) {
   context.canvas.width = width;
   context.canvas.height = height;
   context.putImageData(output, 0, 0);
+}
+
+function drawYUV(canvas, buffer) {
+
+  var format  = canvas.data('format').val();
+  var width   = canvas.data('width').val();
+  var height  = canvas.data('height').val();
+  var pitchY  = canvas.data('pitchY').val();
+  var pitchC  = canvas.data('pitchC').val();
+
+  if (!buffer) {
+    console.log('no buffer');
+    return;
+  }
+
+  if (width <= 0 || height <= 0) {
+    console.log('no resolution');
+    return;
+  }
+
+  if (pitchY <= 0) {
+    pitchY = width;
+  }
+
+  if (pitchC <= 0) {
+    if (format == 'NV12' || format == 'NV21') {
+      pitchC = pitchY;
+    }
+    if (format == 'I420' || format == 'YV12') {
+      pitchC = pitchY >> 1;
+    }
+  }
+
+  if (window.location.href.endsWith('/webgl2.html')) {
+    drawYUV_webgl2(canvas, buffer, format, width, height, pitchY, pitchC);
+  } else {
+    drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC);
+  }
 
   zoomImage(canvas);
-  canvas.data('bufferYUV', bufferYUV);
+
+  // save current settings and buffer
+  saveCanvasSettings(canvas);
+  canvas.data('buffer', buffer);
 }
 
 function refreshImage(canvas) {
-  return drawYUV(canvas, canvas.data('bufferYUV'));
+  return drawYUV(canvas, canvas.data('buffer'));
 }
 
 function readInputFiles(files, canvas) {
@@ -153,17 +174,17 @@ function readInputFiles(files, canvas) {
       fileC = files[0];
     }
 
-    bufferYUV = new Uint8Array(fileY.size + fileC.size);
+    buffer = new Uint8Array(fileY.size + fileC.size);
 
     var readerC = new FileReader();
     readerC.onload = function() {
-      bufferYUV.set(new Uint8Array(this.result), fileY.size);
-      drawYUV(canvas, bufferYUV);
+      buffer.set(new Uint8Array(this.result), fileY.size);
+      drawYUV(canvas, buffer);
     };
 
     var readerY = new FileReader();
     readerY.onload = function() {
-      bufferYUV.set(new Uint8Array(this.result), 0);
+      buffer.set(new Uint8Array(this.result), 0);
       readerC.readAsArrayBuffer(fileC);
     };
 
@@ -174,8 +195,8 @@ function readInputFiles(files, canvas) {
   else {
     var reader = new FileReader();
     reader.onload = function() {
-      bufferYUV = new Uint8Array(reader.result);
-      drawYUV(canvas, bufferYUV);
+      buffer = new Uint8Array(reader.result);
+      drawYUV(canvas, buffer);
     };
     canvas.data('dropZoneDesc').text(files[0].name);
     reader.readAsArrayBuffer(files[0]);
