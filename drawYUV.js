@@ -138,11 +138,21 @@ function drawYUV(canvas, buffer) {
     }
   }
 
-  if (window.location.href.endsWith('/webgl2.html')) {
-    drawYUV_webgl2(canvas, buffer, format, width, height, pitchY, pitchC);
+  var dispatch = null;
+
+  if (window.location.href.endsWith('?webgl2')) {
+    dispatch = drawYUV_webgl2;
   } else {
-    drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC);
+    dispatch = drawYUV_sw;
   }
+
+  console.log('%s %sx%s pitchY %s pitchC %s', format, width, height, pitchY, pitchC);
+
+  var t0 = performance.now();
+  dispatch(canvas, buffer, format, width, height, pitchY, pitchC);
+  var t1 = performance.now();
+
+  console.log('%s took %f ms', dispatch.name, t1 - t0);
 
   zoomImage(canvas);
 
