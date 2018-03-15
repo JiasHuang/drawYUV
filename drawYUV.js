@@ -138,7 +138,7 @@ function drawYUV(canvas, buffer) {
     }
   }
 
-  if (window.location.href.endsWith('/webgl2')) {
+  if (window.location.href.endsWith('/webgl2.html')) {
     drawYUV_webgl2(canvas, buffer, format, width, height, pitchY, pitchC);
   } else {
     drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC);
