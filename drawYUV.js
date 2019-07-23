@@ -2,14 +2,14 @@
 const canvasInputs = ['format', 'width', 'height', 'pitchY', 'pitchC', 'zoom'];
 
 function saveCanvasSettings(canvas) {
-	for (var i=0; i<canvasInputs.length; i++)	{
+	for (let i=0; i<canvasInputs.length; i++) {
 		localStorage.setItem(canvas.attr('id')+'_'+canvasInputs[i], canvas.data(canvasInputs[i]).val());
 	}
 }
 
 function loadCanvasSettings(canvas) {
-	for (var i=0; i<canvasInputs.length; i++)	{
-		var value = localStorage.getItem(canvas.attr('id')+'_'+canvasInputs[i]);
+	for (let i=0; i<canvasInputs.length; i++) {
+		let value = localStorage.getItem(canvas.attr('id')+'_'+canvasInputs[i]);
 		if (value !== null) {
 			canvas.data(canvasInputs[i]).val(value);
 		}
@@ -32,6 +32,12 @@ function zoomImageAndSaveCanvasSettings(canvas) {
 	saveCanvasSettings(canvas);
 }
 
+function read_u16(buffer, offset, bLE = false) {
+	if (bLE)
+		return buffer[offset+1] << 8 | buffer[offset];
+	return buffer[offset] << 8 | buffer[offset+1];
+}
+
 function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 
 	var context = document.getElementById(canvas.attr('id')).getContext("2d");
@@ -41,7 +47,6 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 	var offsetC = pitchY * height;
 	var offsetU = offsetC;
 	var offsetV = offsetU + pitchC * (height>>1);
-	var w, h, o;
 
 	if (format == 'YV12') {
 		offsetU = offsetV;
@@ -53,30 +58,28 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 	}
 
 	if (format == 'Y') {
-		for (h=0; h<height; h++) {
-			for (w=0; w<width; w++) {
-				posY = w + h * pitchY + offsetY;
-				Y = buffer[posY];
-				pos = w*4 + width*h*4;
-				output.data[pos+0] = Y;
-				output.data[pos+1] = Y;
-				output.data[pos+2] = Y;
+		for (let h=0; h<height; h++) {
+			for (let w=0; w<width; w++) {
+				let o = w + h * pitchY + offsetY;
+				let y = buffer[o];
+				let pos = w*4 + width*h*4;
+				output.data[pos+0] = y;
+				output.data[pos+1] = y;
+				output.data[pos+2] = y;
 				output.data[pos+3] = 255;
 			}
 		}
 	}
 
 	else if (format == 'Y-10B') {
-		for (h=0; h<height; h++) {
-			for (w=0; w<width; w+=4) {
-
-				o = (w * 5 / 4) + h * pitchY + offsetY;
-				var y0 = (((buffer[o] << 8 | buffer[o+1]) >> 6) & 0x3ff) >> 2;
-				var y1 = (((buffer[o+1] << 8 | buffer[o+2]) >> 4) & 0x3ff) >> 2;
-				var y2 = (((buffer[o+2] << 8 | buffer[o+3]) >> 2) & 0x3ff) >> 2;
-				var y3 = (((buffer[o+3] << 8 | buffer[o+4])) & 0x3ff) >> 2;
-
-				pos = w*4 + width*h*4;
+		for (let h=0; h<height; h++) {
+			for (let w=0; w<width; w+=4) {
+				let o = (w * 5 / 4) + h * pitchY + offsetY;
+				let y0 = ((read_u16(buffer, o) >> 6) & 0x3ff) >> 2;
+				let y1 = ((read_u16(buffer, o+1) >> 4) & 0x3ff) >> 2;
+				let y2 = ((read_u16(buffer, o+2) >> 2) & 0x3ff) >> 2;
+				let y3 = ((read_u16(buffer, o+3)) & 0x3ff) >> 2;
+				let pos = w*4 + width*h*4;
 
 				output.data[pos+0] = y0;
 				output.data[pos+1] = y0;
@@ -102,111 +105,84 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 	}
 
 	else if (format == 'I420' || format == 'YV12') {
-		for (h=0; h<height; h++) {
-			for (w=0; w<width; w++) {
-				posY = w + h * pitchY + offsetY;
-				posU = (w>>1) + (h>>1) * pitchC + offsetU;
-				posV = (w>>1) + (h>>1) * pitchC + offsetV;
-				Y = buffer[posY];
-				U = buffer[posU];
-				V = buffer[posV];
-				pos = w*4 + width*h*4;
-				output.data[pos+0] = Y + 1.370 * (V - 128);
-				output.data[pos+1] = Y - 0.698 * (V - 128) - 0.337 * (U - 128);
-				output.data[pos+2] = Y + 1.732 * (U - 128);
+		for (let h=0; h<height; h++) {
+			for (let w=0; w<width; w++) {
+				let y = buffer[w + h * pitchY + offsetY];
+				let u = buffer[(w>>1) + (h>>1) * pitchC + offsetU];
+				let v = buffer[(w>>1) + (h>>1) * pitchC + offsetV];
+				let pos = w*4 + width*h*4;
+				output.data[pos+0] = y + 1.370 * (v - 128);
+				output.data[pos+1] = y - 0.698 * (v - 128) - 0.337 * (u - 128);
+				output.data[pos+2] = y + 1.732 * (u - 128);
 				output.data[pos+3] = 255;
 			}
 		}
 	}
 
-	else if (format == 'YUV420P10BE') {
-		for (h=0; h<height; h++) {
-			for (w=0; w<width; w++) {
-				o = (w << 1) + h * pitchY + offsetY;
-				Y = ((buffer[o] << 8 | buffer[o+1]) & 0x3ff) >> 2;
-				o = ((w >> 1) << 1) + (h>>1) * pitchC + offsetU;
-				U = ((buffer[o] << 8 | buffer[o+1]) & 0x3ff) >> 2;
-				o = ((w >> 1) << 1) + (h>>1) * pitchC + offsetV;
-				V = ((buffer[o] << 8 | buffer[o+1]) & 0x3ff) >> 2;
-				pos = w*4 + width*h*4;
-				output.data[pos+0] = Y + 1.370 * (V - 128);
-				output.data[pos+1] = Y - 0.698 * (V - 128) - 0.337 * (U - 128);
-				output.data[pos+2] = Y + 1.732 * (U - 128);
+	else if (format == 'YUV420P10BE' || format == 'YUV420P10LE') {
+		let bLE = (format == 'YUV420P10LE') ? true:false;
+		for (let h=0; h<height; h++) {
+			for (let w=0; w<width; w++) {
+				let y = (read_u16(buffer, (w << 1) + h * pitchY + offsetY, bLE) & 0x3ff) >> 2;
+				let u = (read_u16(buffer, ((w >> 1) << 1) + (h>>1) * pitchC + offsetU, bLE) & 0x3ff) >> 2;
+				let v = (read_u16(buffer, ((w >> 1) << 1) + (h>>1) * pitchC + offsetV, bLE) & 0x3ff) >> 2;
+				let pos = w*4 + width*h*4;
+				output.data[pos+0] = y + 1.370 * (v - 128);
+				output.data[pos+1] = y - 0.698 * (v - 128) - 0.337 * (u - 128);
+				output.data[pos+2] = y + 1.732 * (u - 128);
 				output.data[pos+3] = 255;
 			}
 		}
 	}
-
-	else if (format == 'YUV420P10LE') {
-		for (h=0; h<height; h++) {
-			for (w=0; w<width; w++) {
-				o = (w << 1) + h * pitchY + offsetY;
-				Y = ((buffer[o+1] << 8 | buffer[o]) & 0x3ff) >> 2;
-				o = ((w >> 1) << 1) + (h>>1) * pitchC + offsetU;
-				U = ((buffer[o+1] << 8 | buffer[o]) & 0x3ff) >> 2;
-				o = ((w >> 1) << 1) + (h>>1) * pitchC + offsetV;
-				V = ((buffer[o+1] << 8 | buffer[o]) & 0x3ff) >> 2;
-				pos = w*4 + width*h*4;
-				output.data[pos+0] = Y + 1.370 * (V - 128);
-				output.data[pos+1] = Y - 0.698 * (V - 128) - 0.337 * (U - 128);
-				output.data[pos+2] = Y + 1.732 * (U - 128);
-				output.data[pos+3] = 255;
-			}
-		}
-	}
-
 
 	else if (format == 'NV12' || format == 'NV21') {
-		for (var h=0; h<height; h++) {
-			for (var w=0; w<width; w++) {
-				posY = w + h * pitchY + offsetY;
-				posU = (w>>1)*2 + (h>>1) * pitchC + offsetC;
-				posV = posU ^ 1;
-				Y = buffer[posY];
-				U = buffer[posU];
-				V = buffer[posV];
-				pos = w*4 + width*h*4;
-				output.data[pos+0] = Y + 1.370 * (V - 128);
-				output.data[pos+1] = Y - 0.698 * (V - 128) - 0.337 * (U - 128);
-				output.data[pos+2] = Y + 1.732 * (U - 128);
+		for (let h=0; h<height; h++) {
+			for (let w=0; w<width; w++) {
+				let y = buffer[w + h * pitchY + offsetY];
+				let u = buffer[(w>>1)*2 + (h>>1) * pitchC + offsetC];
+				let v = buffer[(w>>1)*2 + (h>>1) * pitchC + (offsetC ^ 1)];
+				let pos = w*4 + width*h*4;
+				output.data[pos+0] = y + 1.370 * (v - 128);
+				output.data[pos+1] = y - 0.698 * (v - 128) - 0.337 * (u - 128);
+				output.data[pos+2] = y + 1.732 * (u - 128);
 				output.data[pos+3] = 255;
 			}
 		}
 	}
 
 	else if (format == 'NV12-10B') {
-		for (h=0; h<height; h++) {
-			for (w=0; w<width; w+=4) {
+		for (let h=0; h<height; h++) {
+			for (let w=0; w<width; w+=4) {
 
-				o = (w * 5 / 4) + h * pitchY + offsetY;
-				var y0 = (((buffer[o] << 8 | buffer[o+1]) >> 6) & 0x3ff) >> 2;
-				var y1 = (((buffer[o+1] << 8 | buffer[o+2]) >> 4) & 0x3ff) >> 2;
-				var y2 = (((buffer[o+2] << 8 | buffer[o+3]) >> 2) & 0x3ff) >> 2;
-				var y3 = (((buffer[o+3] << 8 | buffer[o+4])) & 0x3ff) >> 2;
+				let o0 = (w * 5 / 4) + h * pitchY + offsetY;
+				let y0 = ((read_u16(buffer, o0) >> 6) & 0x3ff) >> 2;
+				let y1 = ((read_u16(buffer, o0+1) >> 4) & 0x3ff) >> 2;
+				let y2 = ((read_u16(buffer, o0+2) >> 2) & 0x3ff) >> 2;
+				let y3 = ((read_u16(buffer, o0+3)) & 0x3ff) >> 2;
 
-				o = (w * 5 / 4) + (h>>1) * pitchC + offsetC;
-				var u0 = (((buffer[o] << 8 | buffer[o+1]) >> 6) & 0x3ff) >> 2;
-				var v0 = (((buffer[o+1] << 8 | buffer[o+2]) >> 4) & 0x3ff) >> 2;
-				var u1 = (((buffer[o+2] << 8 | buffer[o+3]) >> 2) & 0x3ff) >> 2;
-				var v1 = (((buffer[o+3] << 8 | buffer[o+4])) & 0x3ff) >> 2;
-				pos = w*4 + width*h*4;
+				let o1 = (w * 5 / 4) + (h>>1) * pitchY + offsetC;
+				let u0 = ((read_u16(buffer, o1) >> 6) & 0x3ff) >> 2;
+				let v0 = ((read_u16(buffer, o1+1) >> 4) & 0x3ff) >> 2;
+				let u1 = ((read_u16(buffer, o1+2) >> 2) & 0x3ff) >> 2;
+				let v1 = ((read_u16(buffer, o1+3)) & 0x3ff) >> 2;
+				let pos = w*4 + width*h*4;
 
-				output.data[pos+0] = y0 +  1.370 * (v0 - 128);
+				output.data[pos+0] = y0 + 1.370 * (v0 - 128);
 				output.data[pos+1] = y0 - 0.698 * (v0 - 128) - 0.337 * (u0 - 128);
 				output.data[pos+2] = y0 + 1.732 * (u0 - 128);
 				output.data[pos+3] = 255;
 
-				output.data[pos+4] = y1 +  1.370 * (v0 - 128);
+				output.data[pos+4] = y1 + 1.370 * (v0 - 128);
 				output.data[pos+5] = y1 - 0.698 * (v0 - 128) - 0.337 * (u0 - 128);
 				output.data[pos+6] = y1 + 1.732 * (u0 - 128);
 				output.data[pos+7] = 255;
 
-				output.data[pos+8] = y2 +  1.370 * (v1 - 128);
+				output.data[pos+8] = y2 + 1.370 * (v1 - 128);
 				output.data[pos+9] = y2 - 0.698 * (v1 - 128) - 0.337 * (u1 - 128);
 				output.data[pos+10] = y2 + 1.732 * (u1 - 128);
 				output.data[pos+11] = 255;
 
-				output.data[pos+12] = y3 +  1.370 * (v1 - 128);
+				output.data[pos+12] = y3 + 1.370 * (v1 - 128);
 				output.data[pos+13] = y3 - 0.698 * (v1 - 128) - 0.337 * (u1 - 128);
 				output.data[pos+14] = y3 + 1.732 * (u1 - 128);
 				output.data[pos+15] = 255;
@@ -355,7 +331,7 @@ function handleDragOver(e) {
 }
 
 function initCanvasSettings(canvas, options) {
-	for (var key in options) {
+	for (let key in options) {
 		canvas.data(key, $('#'+options[key]));
 	}
 	document.getElementById(options['selectedFiles']).addEventListener('change', handleFileSelect.bind(canvas), false);
