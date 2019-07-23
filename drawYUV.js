@@ -41,7 +41,7 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 	var offsetC = pitchY * height;
 	var offsetU = offsetC;
 	var offsetV = offsetU + pitchC * (height>>1);
-	var o, v, w, h;
+	var w, h, o;
 
 	if (format == 'YV12') {
 		offsetU = offsetV;
@@ -66,36 +66,36 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 		}
 	}
 
-	else if (format == 'Y_10b') {
+	else if (format == 'Y-10B') {
 		for (h=0; h<height; h++) {
 			for (w=0; w<width; w+=4) {
 
 				o = (w * 5 / 4) + h * pitchY + offsetY;
-				var v0 = (((buffer[o] << 8 | buffer[o+1]) >> 6) & 0x3ff) >> 2;
-				var v1 = (((buffer[o+1] << 8 | buffer[o+2]) >> 4) & 0x3ff) >> 2;
-				var v2 = (((buffer[o+2] << 8 | buffer[o+3]) >> 2) & 0x3ff) >> 2;
-				var v3 = (((buffer[o+3] << 8 | buffer[o+4])) & 0x3ff) >> 2;
+				var y0 = (((buffer[o] << 8 | buffer[o+1]) >> 6) & 0x3ff) >> 2;
+				var y1 = (((buffer[o+1] << 8 | buffer[o+2]) >> 4) & 0x3ff) >> 2;
+				var y2 = (((buffer[o+2] << 8 | buffer[o+3]) >> 2) & 0x3ff) >> 2;
+				var y3 = (((buffer[o+3] << 8 | buffer[o+4])) & 0x3ff) >> 2;
 
 				pos = w*4 + width*h*4;
 
-				output.data[pos+0] = v0;
-				output.data[pos+1] = v0;
-				output.data[pos+2] = v0;
+				output.data[pos+0] = y0;
+				output.data[pos+1] = y0;
+				output.data[pos+2] = y0;
 				output.data[pos+3] = 255;
 
-				output.data[pos+4] = v1;
-				output.data[pos+5] = v1;
-				output.data[pos+6] = v1;
+				output.data[pos+4] = y1;
+				output.data[pos+5] = y1;
+				output.data[pos+6] = y1;
 				output.data[pos+7] = 255;
 
-				output.data[pos+8] = v2;
-				output.data[pos+9] = v2;
-				output.data[pos+10] = v2;
+				output.data[pos+8] = y2;
+				output.data[pos+9] = y2;
+				output.data[pos+10] = y2;
 				output.data[pos+11] = 255;
 
-				output.data[pos+12] = v3;
-				output.data[pos+13] = v3;
-				output.data[pos+14] = v3;
+				output.data[pos+12] = y3;
+				output.data[pos+13] = y3;
+				output.data[pos+14] = y3;
 				output.data[pos+15] = 255;
 			}
 		}
@@ -119,7 +119,7 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 		}
 	}
 
-	else if (format == 'yuv420p10be') {
+	else if (format == 'YUV420P10BE') {
 		for (h=0; h<height; h++) {
 			for (w=0; w<width; w++) {
 				o = (w << 1) + h * pitchY + offsetY;
@@ -137,7 +137,7 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 		}
 	}
 
-	else if (format == 'yuv420p10le') {
+	else if (format == 'YUV420P10LE') {
 		for (h=0; h<height; h++) {
 			for (w=0; w<width; w++) {
 				o = (w << 1) + h * pitchY + offsetY;
@@ -174,7 +174,7 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 		}
 	}
 
-	else if (format == 'NV12_10b') {
+	else if (format == 'NV12-10B') {
 		for (h=0; h<height; h++) {
 			for (w=0; w<width; w+=4) {
 
@@ -238,16 +238,16 @@ function drawYUV(canvas, buffer) {
 	}
 
 	if (pitchY <= 0) {
-		if (format == 'yuv420p10be' || format == 'yuv420p10le')
+		if (format == 'YUV420P10BE' || format == 'YUV420P10LE')
 			pitchY = width * 2;
-		else if (format == 'Y_10b' || format == 'NV12_10b')
+		else if (format == 'Y-10B' || format == 'NV12-10B')
 			pitchY = width * 5 / 4;
 		else
 			pitchY = width;
 	}
 
 	if (pitchC <= 0) {
-		if (format == 'NV12' || format == 'NV21' || format == 'NV12_10b')
+		if (format == 'NV12' || format == 'NV21' || format == 'NV12-10B')
 			pitchC = pitchY;
 		else
 			pitchC = pitchY >> 1;
