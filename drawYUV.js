@@ -289,7 +289,7 @@ function readInputFiles(files, canvas) {
 		return;
 	}
 
-	if (files.length == 2 && (format == 'NV12' || format == 'NV21')) {
+	if (files.length == 2 && (format == 'NV12' || format == 'NV21' || format == 'NV12-10B')) {
 
 		var fileY = files[0];
 		var fileC = files[1];
