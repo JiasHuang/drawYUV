@@ -38,6 +38,20 @@ function read_u16(buffer, offset, bLE = false) {
 	return buffer[offset] << 8 | buffer[offset+1];
 }
 
+function write_grey(buffer, offset, y) {
+	buffer[offset+0] = y;
+	buffer[offset+1] = y;
+	buffer[offset+2] = y;
+	buffer[offset+3] = 255;
+}
+
+function write_pixel(buffer, offset, y, u, v) {
+	buffer[offset+0] = y + 1.370 * (v - 128);
+	buffer[offset+1] = y - 0.698 * (v - 128) - 0.337 * (u - 128);
+	buffer[offset+2] = y + 1.732 * (u - 128);
+	buffer[offset+3] = 255;
+}
+
 function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 
 	var context = document.getElementById(canvas.attr('id')).getContext("2d");
@@ -63,10 +77,7 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 				let o = w + h * pitchY + offsetY;
 				let y = buffer[o];
 				let pos = w*4 + width*h*4;
-				output.data[pos+0] = y;
-				output.data[pos+1] = y;
-				output.data[pos+2] = y;
-				output.data[pos+3] = 255;
+				write_grey(output.data, pos, y);
 			}
 		}
 	}
@@ -80,26 +91,10 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 				let y2 = ((read_u16(buffer, o+2) >> 2) & 0x3ff) >> 2;
 				let y3 = ((read_u16(buffer, o+3)) & 0x3ff) >> 2;
 				let pos = w*4 + width*h*4;
-
-				output.data[pos+0] = y0;
-				output.data[pos+1] = y0;
-				output.data[pos+2] = y0;
-				output.data[pos+3] = 255;
-
-				output.data[pos+4] = y1;
-				output.data[pos+5] = y1;
-				output.data[pos+6] = y1;
-				output.data[pos+7] = 255;
-
-				output.data[pos+8] = y2;
-				output.data[pos+9] = y2;
-				output.data[pos+10] = y2;
-				output.data[pos+11] = 255;
-
-				output.data[pos+12] = y3;
-				output.data[pos+13] = y3;
-				output.data[pos+14] = y3;
-				output.data[pos+15] = 255;
+				write_grey(output.data, pos+0, y0);
+				write_grey(output.data, pos+4, y1);
+				write_grey(output.data, pos+8, y2);
+				write_grey(output.data, pos+12, y3);
 			}
 		}
 	}
@@ -111,10 +106,7 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 				let u = buffer[(w>>1) + (h>>1) * pitchC + offsetU];
 				let v = buffer[(w>>1) + (h>>1) * pitchC + offsetV];
 				let pos = w*4 + width*h*4;
-				output.data[pos+0] = y + 1.370 * (v - 128);
-				output.data[pos+1] = y - 0.698 * (v - 128) - 0.337 * (u - 128);
-				output.data[pos+2] = y + 1.732 * (u - 128);
-				output.data[pos+3] = 255;
+				write_pixel(output.data, pos, y, u, v);
 			}
 		}
 	}
@@ -127,10 +119,7 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 				let u = (read_u16(buffer, ((w >> 1) << 1) + (h>>1) * pitchC + offsetU, bLE) & 0x3ff) >> 2;
 				let v = (read_u16(buffer, ((w >> 1) << 1) + (h>>1) * pitchC + offsetV, bLE) & 0x3ff) >> 2;
 				let pos = w*4 + width*h*4;
-				output.data[pos+0] = y + 1.370 * (v - 128);
-				output.data[pos+1] = y - 0.698 * (v - 128) - 0.337 * (u - 128);
-				output.data[pos+2] = y + 1.732 * (u - 128);
-				output.data[pos+3] = 255;
+				write_pixel(output.data, pos, y, u, v);
 			}
 		}
 	}
@@ -142,10 +131,7 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 				let u = buffer[(w>>1)*2 + (h>>1) * pitchC + offsetC];
 				let v = buffer[(w>>1)*2 + (h>>1) * pitchC + (offsetC ^ 1)];
 				let pos = w*4 + width*h*4;
-				output.data[pos+0] = y + 1.370 * (v - 128);
-				output.data[pos+1] = y - 0.698 * (v - 128) - 0.337 * (u - 128);
-				output.data[pos+2] = y + 1.732 * (u - 128);
-				output.data[pos+3] = 255;
+				write_pixel(output.data, pos, y, u, v);
 			}
 		}
 	}
@@ -153,39 +139,21 @@ function drawYUV_sw(canvas, buffer, format, width, height, pitchY, pitchC) {
 	else if (format == 'NV12-10B') {
 		for (let h=0; h<height; h++) {
 			for (let w=0; w<width; w+=4) {
-
 				let o0 = (w * 5 / 4) + h * pitchY + offsetY;
 				let y0 = ((read_u16(buffer, o0) >> 6) & 0x3ff) >> 2;
 				let y1 = ((read_u16(buffer, o0+1) >> 4) & 0x3ff) >> 2;
 				let y2 = ((read_u16(buffer, o0+2) >> 2) & 0x3ff) >> 2;
 				let y3 = ((read_u16(buffer, o0+3)) & 0x3ff) >> 2;
-
 				let o1 = (w * 5 / 4) + (h>>1) * pitchY + offsetC;
 				let u0 = ((read_u16(buffer, o1) >> 6) & 0x3ff) >> 2;
 				let v0 = ((read_u16(buffer, o1+1) >> 4) & 0x3ff) >> 2;
 				let u1 = ((read_u16(buffer, o1+2) >> 2) & 0x3ff) >> 2;
 				let v1 = ((read_u16(buffer, o1+3)) & 0x3ff) >> 2;
 				let pos = w*4 + width*h*4;
-
-				output.data[pos+0] = y0 + 1.370 * (v0 - 128);
-				output.data[pos+1] = y0 - 0.698 * (v0 - 128) - 0.337 * (u0 - 128);
-				output.data[pos+2] = y0 + 1.732 * (u0 - 128);
-				output.data[pos+3] = 255;
-
-				output.data[pos+4] = y1 + 1.370 * (v0 - 128);
-				output.data[pos+5] = y1 - 0.698 * (v0 - 128) - 0.337 * (u0 - 128);
-				output.data[pos+6] = y1 + 1.732 * (u0 - 128);
-				output.data[pos+7] = 255;
-
-				output.data[pos+8] = y2 + 1.370 * (v1 - 128);
-				output.data[pos+9] = y2 - 0.698 * (v1 - 128) - 0.337 * (u1 - 128);
-				output.data[pos+10] = y2 + 1.732 * (u1 - 128);
-				output.data[pos+11] = 255;
-
-				output.data[pos+12] = y3 + 1.370 * (v1 - 128);
-				output.data[pos+13] = y3 - 0.698 * (v1 - 128) - 0.337 * (u1 - 128);
-				output.data[pos+14] = y3 + 1.732 * (u1 - 128);
-				output.data[pos+15] = 255;
+				write_pixel(output.data, pos+0, y0, u0, v0);
+				write_pixel(output.data, pos+4, y1, u0, v0);
+				write_pixel(output.data, pos+8, y2, u1, v1);
+				write_pixel(output.data, pos+12, y3, u1, v1);
 			}
 		}
 	}
