@@ -198,7 +198,12 @@ function drawYUV_webgl2(canvas, buffer, format, width, height, pitchY, pitchC) {
 	// Tell it to use our program (pair of shaders)
 	gl.useProgram(program);
 
-	if (format == 'I420' || format == 'YV12') {
+	if (format == 'Y') {
+		createTexture(gl, 0, pitchY, height, buffer, gl.LUMINANCE, gl.LUMINANCE, 0);
+		gl.uniform1i(gl.getUniformLocation(program, 'uBufferY'), 0);
+	}
+
+	else if (format == 'I420' || format == 'YV12') {
 		let offsetU = (format == 'I420') ? sizeY : (sizeY + sizeC);
 		let offsetV = (format == 'I420') ? (sizeY + sizeC) : sizeY;
 		createTexture(gl, 0, pitchY, height, buffer, gl.LUMINANCE, gl.LUMINANCE, 0);
