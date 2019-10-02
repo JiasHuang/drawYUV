@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="referrer" content="no-referrer" />
+
+<title>drawRAW</title>
+
+<link rel="stylesheet" href="style.css?v=4b1c2f263f8881a4e764170045df043e">
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="drawRAW.js?v=dec6df1338fe6af8aa9addc9cc8d8212"></script>
+
+<script>
+  $(document).ready(function(){
+    if (!(window.File && window.FileReader && window.FileList && window.Blob)) {
+      alert('The File APIs are not fully supported in this browser.');
+    }
+    var options = {
+      format : 'format',
+      width : 'width',
+      height : 'height',
+      stride : 'stride',
+      zoom : 'zoom',
+      selectedFiles : 'selectedFiles',
+      dropZone : 'dropZone',
+      dropZoneDesc : 'dropZoneDesc',
+    };
+    initCanvasSettings($('#resultRAW'), options);
+  });
+</script>
+
+</head>
+
+<body id='dropZone'>
+
+  <table class='settings'>
+
+    <tr>
+      <th>format</th>
+      <td>
+        <select id="format" onchange="refreshImage($('#resultRAW'))">
+          <option value="BAYER-BGGR8">BAYER-BGGR8</option>
+          <option value="BAYER-RGGB8">BAYER-RGGB8</option>
+          <option value="BAYER-GBRG8">BAYER-GBRG8</option>
+          <option value="BAYER-GRBG8">BAYER-GRBG8</option>
+          <option value="BAYER-BGGR10">BAYER-BGGR10</option>
+          <option value="BAYER-RGGB10">BAYER-RGGB10</option>
+          <option value="BAYER-GBRG10">BAYER-GBRG10</option>
+          <option value="BAYER-GRBG10">BAYER-GRBG10</option>
+          <option value="DUMP10">DUMP10</option>
+        </select>
+      </td>
+      <th>zoom</th>
+      <td>
+        <select id="zoom" onchange="zoomImageAndSaveCanvasSettings($('#resultRAW'))">
+          <option value="0.125">0.125</option>
+          <option value="0.25">0.25</option>
+          <option value="0.5">0.5</option>
+          <option value="1" selected="selected">1</option>
+          <option value="2">2</option>
+          <option value="4">4</option>
+          <option value="8">8</option>
+        </select>
+      </td>
+    </tr>
+
+    <tr>
+      <th>width</th>
+      <td><input type="text" id="width" value="1920" /></td>
+      <th>height</th>
+      <td><input type="text" id="height" value="1088" /></td>
+      <th>stride</th>
+      <td><input type="text" id="stride" value="0" /></td>
+      <td><button onclick="refreshImage($('#resultRAW'))">refresh</button></td>
+    </tr>
+
+  </table>
+
+  <input type="file" id="selectedFiles" name="files[]" multiple />
+
+  <p id="dropZoneDesc">Drag RAW file here</p>
+  <canvas id="resultRAW"></canvas>
+
+</body>
+
+</html>
