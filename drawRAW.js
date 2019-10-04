@@ -467,7 +467,7 @@ function drawRAW_sw(canvas, buffer, format, width, height, stride) {
     }
   }
 
-  else if (format == 'BAYER-RGGB10P-UNPACK16') {
+  else if (format == 'BAYER-RGGB10-UNPACK16') {
     for (let h=0; h<height; h+=2) {
       for (let w=0; w<width; w+=4) {
         let raw = read_raw16_4x6(buffer, h, w, stride);
@@ -485,7 +485,7 @@ function drawRAW_sw(canvas, buffer, format, width, height, stride) {
     }
   }
 
-  else if (format == 'BAYER-GBRG10P-UNPACK16') {
+  else if (format == 'BAYER-GBRG10-UNPACK16') {
     for (let h=0; h<height; h+=2) {
       for (let w=0; w<width; w+=4) {
         let raw = read_raw16_4x6(buffer, h, w, stride);
