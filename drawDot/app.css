@@ -1,0 +1,22 @@
+
+body {
+  background-color: silver;
+  width: calc(100vw - 8px);
+  min-height: calc(100vh - 8px);
+  margin: 2px;
+  border: 2px dashed white;
+  }
+
+#selectedFiles {
+  margin: 5px;
+}
+
+#dropZoneDesc {
+  margin: 5px;
+}
+
+#menu {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+}

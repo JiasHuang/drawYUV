@@ -1,0 +1,55 @@
+
+var worker = null;
+
+function handleMessage(e)
+{
+  document.getElementById('result').innerHTML = e.data.result;
+}
+
+function readInputFile(file)
+{
+  var reader = new FileReader();
+  reader.onload = function()
+  {
+    var digraph = reader.result;
+    var params = {
+      'src': digraph,
+      'id': 0,
+      'options': {
+        'files': [],
+        'format': 'svg',
+        'engine' : 'dot'
+      },
+    };
+    worker.postMessage(params);
+  }
+
+  reader.readAsText(file);
+}
+
+function handleFileSelect(e)
+{
+  var files = e.target.files;
+  readInputFile(files[0]);
+}
+
+function handleDrop(e)
+{
+  e.preventDefault();
+  var dt = e.dataTransfer;
+  readInputFile(dt.items[0].getAsFile());
+}
+
+function handleDragOver(e)
+{
+  e.preventDefault();
+}
+
+function initApp()
+{
+  worker = new Worker("full.render.js");
+  worker.addEventListener("message", handleMessage, false);
+  document.getElementById('selectedFiles').addEventListener('change', handleFileSelect, false);
+  document.getElementById('dropZone').addEventListener('drop', handleDrop, false);
+  document.getElementById('dropZone').addEventListener('dragover', handleDragOver, false);
+}
