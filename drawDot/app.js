@@ -3,7 +3,18 @@ var worker = null;
 
 function handleMessage(e)
 {
-  document.getElementById('result').innerHTML = e.data.result;
+  var parser = new DOMParser();
+  var svg = parser.parseFromString(e.data.result, "image/svg+xml");
+  var svgEl = svg.documentElement;
+  var resultEl = document.getElementById('result');
+  resultEl.innerHTML = '';
+  resultEl.appendChild(svgEl);
+  svgPanZoom(svgEl, {
+    zoomEnabled: true,
+    controlIconsEnabled: true,
+    fit: true,
+    center: true,
+  });
 }
 
 function readInputFile(file)
@@ -47,7 +58,8 @@ function handleDragOver(e)
 
 function initApp()
 {
-  worker = new Worker("full.render.js");
+  //worker = new Worker("full.render.js");
+  worker = new Worker(URL.createObjectURL(new Blob(["(" + local_worker_function.toString() + ")()"], { type: 'text/javascript' })));
   worker.addEventListener("message", handleMessage, false);
   document.getElementById('selectedFiles').addEventListener('change', handleFileSelect, false);
   document.getElementById('dropZone').addEventListener('drop', handleDrop, false);

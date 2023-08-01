@@ -6,11 +6,13 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="referrer" content="no-referrer" />
 
-<title>AppDot</title>
+<title>DrawDot</title>
 
 <link rel="stylesheet" href="app.css">
 
 <script type="text/javascript" src="app.js"></script>
+<script type="text/javascript" src="local.full.render.js"></script>
+<script type="text/javascript" src="svg-pan-zoom.min.js" charset="utf-8"></script>
 
 <script>
   window.onload = initApp;
@@ -19,8 +21,8 @@
 </head>
 
 <body id='dropZone'>
-  <input id="selectedFiles" type="file" name="file" />
-  <p id="result">Drag Dot file here</p>
+  <input id="selectedFiles" type="file" name="selectedFiles" accept=".dot"/>
+  <div id="result">Drag Dot file here</div>
 </body>
 
 </html>
