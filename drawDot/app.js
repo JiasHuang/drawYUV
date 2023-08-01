@@ -58,8 +58,8 @@ function handleDragOver(e)
 
 function initApp()
 {
-  //worker = new Worker("full.render.js");
-  worker = new Worker(URL.createObjectURL(new Blob(["(" + local_worker_function.toString() + ")()"], { type: 'text/javascript' })));
+  worker = new Worker("full.render.js");
+  //worker = new Worker(URL.createObjectURL(new Blob(["(" + local_worker_function.toString() + ")()"], { type: 'text/javascript' })));
   worker.addEventListener("message", handleMessage, false);
   document.getElementById('selectedFiles').addEventListener('change', handleFileSelect, false);
   document.getElementById('dropZone').addEventListener('drop', handleDrop, false);
