@@ -1,5 +1,6 @@
 
 var worker = null;
+var svg_content = null;
 
 function handleMessage(e)
 {
@@ -15,6 +16,9 @@ function handleMessage(e)
     fit: true,
     center: true,
   });
+
+  // save svg_content
+  svg_content = e.data.result;
 }
 
 function readInputFile(file)
@@ -54,6 +58,15 @@ function handleDrop(e)
 function handleDragOver(e)
 {
   e.preventDefault();
+}
+
+function exportSvg()
+{
+  const link = document.createElement('a');
+  link.href = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg_content);
+  link.download = 'output.svg';
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 function initApp()
