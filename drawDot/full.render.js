@@ -54,7 +54,8 @@ function render(instance, src, options) {
 }
 
 if (typeof importScripts === "function") {
-  var instance = Module();
+  //var instance = Module();
+  var instance = Module({TOTAL_MEMORY: 1<<25});
   
   onmessage = function(event) {
     var id = event.data.id;
