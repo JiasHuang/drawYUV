@@ -1,0 +1,42 @@
+
+body {
+  background-color: silver;
+  width: calc(100vw - 8px);
+  min-height: calc(100vh - 8px);
+  margin: 2px;
+  border: 2px dashed white;
+}
+
+.settings {
+  border: 2px solid white;
+  font-size: 20px;
+  margin: 5px;
+}
+
+.settings th {
+  text-align: left;
+}
+
+.settings input {
+  max-width: 80px;
+  text-align: center;
+}
+
+.settings select {
+  width: 80px;
+  text-align-last: center;
+}
+
+#format {
+  min-width: 250px;
+}
+
+#selectedFiles {
+  margin: 5px;
+}
+
+#dropZoneDesc {
+  margin: 5px;
+  font-size: 32px;
+  color: white;
+}
