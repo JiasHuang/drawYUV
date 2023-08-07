@@ -1,7 +1,7 @@
-# drawDot
+# DotViewer
 
 ## Requirements and License
 - [GraphvizOnline](https://github.com/dreampuf/GraphvizOnline/LICENSE)
 
 ## Online Tool
-- https://jiashuang.github.io/drawYUV/drawDot
+- https://jiashuang.github.io/drawYUV/viewer/dot/app.html
