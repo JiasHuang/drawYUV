@@ -33,3 +33,23 @@ p {
   top: 10px;
   right: 10px;
 }
+
+.value {
+  background-color:lightgrey;
+}
+
+ul {
+  list-style-type: square;
+}
+
+.caret {
+  user-select: none;
+}
+
+.nested {
+  display: none;
+}
+
+.active {
+  display: block;
+}
