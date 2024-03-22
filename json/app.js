@@ -6,7 +6,7 @@ const AppType =
 };
 
 var json_obj = null;
-var app_type = null;
+var app_type = AppType.Table;
 
 function str_fmt()
 {
@@ -53,15 +53,12 @@ class JsonViewer
     for (const k in obj)
     {
       let v = obj[k];
-      if (Array.isArray(v) && v.length > 1 && (typeof v[0] === 'object'))
+      if (Array.isArray(v) && v.length >= 1 && (typeof v[0] === 'object'))
       {
         this.depth++;
         for (let i = 0; i < v.length; i++)
         {
-          let title = '';
-          if ('id' in v[i])
-            title = v[i]['id'];
-          this.html += str_fmt('<tr><td>{}[{}] : {}</td><td><table width="100%">', k, i, title);
+          this.html += str_fmt('<tr><td>{}[{}]</td><td><table width="100%">', k, i);
           this.to_table(v[i]);
           this.html += '</table></td></tr>';
         }
@@ -89,15 +86,12 @@ class JsonViewer
     for (const k in obj)
     {
       let v = obj[k];
-      if (Array.isArray(v) && v.length > 1 && (typeof v[0] === 'object'))
+      if (Array.isArray(v) && v.length >= 1 && (typeof v[0] === 'object'))
       {
         this.depth++;
         for (let i = 0; i < v.length; i++)
         {
-          let title = '';
-          if ('id' in v[i])
-            title = v[i]['id'];
-          this.html += str_fmt('<li><span class="caret">{}[{}] : {}</span><ul class="nested">', k, i, title);
+          this.html += str_fmt('<li><span class="caret">{}[{}]</span><ul class="nested">', k, i);
           this.to_tree(v[i]);
           this.html += '</ul></li>';
         }
@@ -133,8 +127,8 @@ function readInputFile(file)
   var reader = new FileReader();
   reader.onload = function()
   {
-    json_obj = JSON.parse(reader.result);
-    to_table();
+    obj = JSON.parse(reader.result);
+    update_result(obj, app_type);
   }
 
   reader.readAsText(file);
@@ -160,25 +154,40 @@ function handleDragOver(e)
 
 function to_table()
 {
-  if (json_obj && app_type != AppType.Table)
-  {
-    let jp = new JsonViewer();
-    jp.to_table(json_obj);
-    document.getElementById('result').innerHTML = jp.html;
-    app_type = AppType.Table;
-  }
+  update_result(json_obj, AppType.Table);
 }
 
 function to_tree()
 {
-  if (json_obj && app_type != AppType.Tree)
+  update_result(json_obj, AppType.Tree);
+}
+
+function update_result(new_obj, new_type)
+{
+  if (!new_obj)
+    return;
+
+  if (new_obj == json_obj && new_type == app_type)
+    return;
+
+  json_obj = new_obj;
+  app_type = new_type;
+
+  if (app_type == AppType.Table)
+  {
+    let jp = new JsonViewer();
+    jp.to_table(json_obj);
+    document.getElementById('result').innerHTML = jp.html;
+  }
+
+  if (app_type == AppType.Tree)
   {
     let jp = new JsonViewer();
     jp.to_tree(json_obj);
     document.getElementById('result').innerHTML = jp.html;
     jp.enable_toggle();
-    app_type = AppType.Tree;
   }
+
 }
 
 function unfoldTree()
